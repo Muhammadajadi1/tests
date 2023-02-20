@@ -411,63 +411,41 @@ void *out_valet(int id){
  * @version 1.0 2/17/2023
  */
 void *monitorThread() {
-    /*Initialize a previous time.*/
-    previous_time = time(NULL);
-    /*A pointer to a pointer of the car.*/
-    Car **parkings; 
-    int parking_size;
-    while (1) {
-        /*Initialize a current time.*/
-        current_time = time(NULL);
-        /* Lock the parking area */
-        pthread_mutex_lock(&PQlock);
-        /* Get an array of parked cars in a parking lot, 
-         * Then stored in the variable parkings.*/
-        parkings=PQiterator(&parking_size);
-        /* Count the number of parked cars and update parking lot */
-        for (int i = 0; i < psize; i++) {
-            if (parkings[i] != NULL) {
-                parking_size++;
-                parkings[i]->ltm -= (current_time - previous_time); // Then update for ltm
-                if (parkings[i]->ltm <= 0) {
-                    sem_post(&full);
-                    parkings[i] = NULL; // Free up the slot
-                }
-            }
-        }
-        /* Print the current state of the parking lot */
-        printf("The number of cars in carpark: %d\n", parking_size);
-        printf("Slot:\t[");
-        for (int i = 0; i < psize; i++) {
-            printf("%d\t|", i + 1);
-        }
-        printf("\n\t|");
-        for (int i = 0; i < psize; i++) {
-            printf("\t|");
-        }
-        printf("\nPark:\t[");
-        for (int i = 0; i < psize; i++) {
-            if (parkings[i]) {
-                parkings[i]->ltm = parkings[i]->ltm - (current_time-previous_time);//Calculate 'duration' for time from last iteration   
-                if (parkings[i]->ltm <=0) sem_post(&full);
-                printf("%d\t|", parkings[i]->cid);
-            } else {
-                printf("%d\t|", 0);
-            }
-        }
-        printf("\n");
-        /* Unlock the parking area */
-        pthread_mutex_unlock(&PQlock);
-        /* Sleep for a random amount of time */
-        float rd = (rand() % 20) / 100.0;
-        sleep(rd);
-        previous_time = current_time;
-        /* ut: Current car-park space utilization
-         * spt: Running sum of car-parking durations
-         */
-        ut = ((double) spt / (psize * (current_time - start_t))) * 100;
-        sleep(1);
-    }
+    int parkings_size;
+	Car **parkings;
+	time_t prev_t = time(NULL);
+	while(1){
+		current_t = time(NULL);
+		pthread_mutex_lock(&PQlock);
+		parkings = PQiterator(&parkings_size);
+		int duration = current_t - prev_t;
+		printf("Monitor: Number of cars in carpark: %d\n",parkings_size);
+		printf("Slot:\t|");
+		for (int i = 0; i < psize; i++){
+			printf("%d\t|",i+1);
+		}
+		printf("\n\t|");
+		for (int i = 0; i < psize; i++){
+			printf("\t|");
+		}
+		printf("\nPark:\t|");
+		for (int i = 0; i < psize; i++) {
+			if (parkings[i]) {
+				parkings[i]->ltm = parkings[i]->ltm - duration;
+				if (parkings[i]->ltm <=0) sem_post(&full);
+				ut = (double) oc/psize * 100;
+				printf("%d\t|",parkings[i]->cid);
+			}
+			else printf("%d\t|",0);
+		}
+		printf("\n");
+		float rd = (rand() % 20)/100.0;
+		sleep(rd);
+		pthread_mutex_unlock(&PQlock);
+		printf("-------------------------------------------------------------------\n");
+		prev_t = current_t;
+		sleep(1);
+	}
 }
 
 
