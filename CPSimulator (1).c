@@ -35,7 +35,7 @@ double ut = 0; 	// Current car-park space utilization
 * 	These variables will be used to print the times in the simulator's final report.
 */
 time_t current_time;	    // The current time of each loop in the monitor thread
-time_t previous_time        // The previous time of each loop in the monitor thread 
+time_t previous_time;       // The previous time of each loop in the monitor thread 
 time_t start_t;				// Time of simulator start
 time_t received_sgnl_t;		// Time of received shutdown signal
 time_t shtdown_t;			// Time the car park is shut down
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]){
 	/* Create the monitor thread */
 	pthread_t monitor_tid;
 	pthread_create(&monitor_tid, &attr, monitorThread, NULL);
-	mon_tids = monitor_tid;
+	monitor_tids = monitor_tid;
 
 	int gen; 			// No. of created cars in every loop
 
@@ -351,7 +351,7 @@ void *in_valet(int id){
 		pthread_mutex_unlock(&PQlock); //release of park lock by valet
 		//returning valet status back to ready to fetch another car
 		setViState(id,READY);
-		nm--;
+		nm--;  // decreament the number of cars currently acquired by in-valets
 
 	}
 	pthread_exit(0);
